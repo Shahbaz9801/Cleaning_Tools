@@ -24,31 +24,31 @@ if uploaded_file:
                  
 
     
-    elif option == 'Amazon':
-        # Step 1: Temp input file save
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
-            tmp_input.write(uploaded_file.getbuffer())
-            temp_input_path = tmp_input.name
+        elif option == 'Amazon':
+            # Step 1: Temp input file save
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
+                tmp_input.write(uploaded_file.getbuffer())
+                temp_input_path = tmp_input.name
+            
+            # Step 2: Clean file
+            cleaner = AmazonCleaner(temp_input_path)
+            cleaner.clean()
+            
+            # Step 3: Output file save
+            output_fd, output_path = tempfile.mkstemp(suffix=".xlsx")
+            os.close(output_fd)  # close handle, warna Windows block karega
+            cleaner.save_data(output_path)
         
-        # Step 2: Clean file
-        cleaner = AmazonCleaner(temp_input_path)
-        cleaner.clean()
+            # Step 4: Download button
+            with open(output_path, "rb") as f:
+                st.download_button(
+                    label="Download Cleaned File",
+                    data=f,
+                    file_name="Cleaned_Amazon_Data.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
         
-        # Step 3: Output file save
-        output_fd, output_path = tempfile.mkstemp(suffix=".xlsx")
-        os.close(output_fd)  # close handle, warna Windows block karega
-        cleaner.save_data(output_path)
-    
-        # Step 4: Download button
-        with open(output_path, "rb") as f:
-            st.download_button(
-                label="Download Cleaned File",
-                data=f,
-                file_name="Cleaned_Amazon_Data.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-    
-        st.success("Data Cleaned Successfully!")
+            st.success("Data Cleaned Successfully!")
 
         
                 
@@ -80,6 +80,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
