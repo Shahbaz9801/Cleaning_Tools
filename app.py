@@ -20,6 +20,7 @@ if uploaded_file:
             st.success("Data Cleaned Successfully!")
             with open(output_path, "rb") as f:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
+                
         elif option == 'Amazon':
             # Step 1: Uploaded file ko temp folder me save karo
             temp_input_path = os.path.join(os.getcwd(), uploaded_file.name)
@@ -33,6 +34,9 @@ if uploaded_file:
             # Step 3: Output file bhi temp me save karo
             output_path = os.path.join(os.getcwd(), f"Cleaned_{option}_Data.xlsx")
             cleaner.save_data(output_path)
+            print("Output path:", output_path)
+            print("File exists after save_data?", os.path.exists(output_path))
+
         
             st.success("Data Cleaned Successfully!")
         
@@ -73,6 +77,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
