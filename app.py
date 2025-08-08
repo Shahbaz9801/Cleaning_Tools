@@ -23,36 +23,32 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
                  
 
-        elif option == 'Amazon':
-            # Step 1: Uploaded file ko temp folder me save karo
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
-                tmp_input.write(uploaded_file.getbuffer())
-                temp_input_path = tmp_input.name
-            
-            # Step 2: Cleaner me temp file ka path do
-            cleaner = AmazonCleaner(temp_input_path)
-            cleaner.clean()
-            
-            # Step 3: Output file bhi temp folder me save karo
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_output:
-                output_path = tmp_output.name
-            cleaner.save_data(output_path)
-            
-            print("Output path:", output_path)
-            print("File exists after save_data?", os.path.exists(output_path))
-            
-            st.success("Data Cleaned Successfully!")
-            
-            # Step 4: Download button
-            with open(output_path, "rb") as f:
-                file_bytes = f.read()
-
+    
+    elif option == 'Amazon':
+        # Step 1: Temp input file save
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
+            tmp_input.write(uploaded_file.getbuffer())
+            temp_input_path = tmp_input.name
+        
+        # Step 2: Clean file
+        cleaner = AmazonCleaner(temp_input_path)
+        cleaner.clean()
+        
+        # Step 3: Output file save
+        output_fd, output_path = tempfile.mkstemp(suffix=".xlsx")
+        os.close(output_fd)  # close handle, warna Windows block karega
+        cleaner.save_data(output_path)
+    
+        # Step 4: Download button
+        with open(output_path, "rb") as f:
             st.download_button(
                 label="Download Cleaned File",
-                data=file_bytes,  # actual bytes pass karo
+                data=f,
                 file_name="Cleaned_Amazon_Data.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+    
+        st.success("Data Cleaned Successfully!")
 
         
                 
@@ -84,6 +80,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
