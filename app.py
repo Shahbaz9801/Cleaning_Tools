@@ -13,7 +13,9 @@ if uploaded_file:
     st.success("File upload successfully!")
 
     if st.button("Clean Data"):
-        if option == "Noon":# Step 1: Temp input file save
+        #------------------------------------------------------------Noon Section--------------------------------------------------------------------------------
+        if option == "Noon":
+            # Step 1: Temp input file save
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
                 tmp_input.write(uploaded_file.getbuffer())
                 temp_input_path = tmp_input.name
@@ -35,7 +37,9 @@ if uploaded_file:
                     file_name="Cleaned_Noon_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-                 
+            st.success("Data Cleaned Successfully!")
+            
+        #------------------------------------------------------------Amazon Section--------------------------------------------------------------------------------          
         elif option == 'Amazon':
             # Step 1: Temp input file save
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
@@ -63,7 +67,7 @@ if uploaded_file:
             st.success("Data Cleaned Successfully!")
 
         
-                
+        #------------------------------------------------------------Revibe Section--------------------------------------------------------------------------------    
         elif option == 'Revibe':
             # Step 1: Temp input file save
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
@@ -87,7 +91,9 @@ if uploaded_file:
                     file_name="Cleaned_Revibe_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+            st.success("Data Cleaned Successfully!")
 
+        #------------------------------------------------------------Talabat Section--------------------------------------------------------------------------------
         elif option == 'Talabat':
             cleaner = TalabatCleaner(uploaded_file)
             cleaner.clean()
@@ -97,6 +103,7 @@ if uploaded_file:
             with open(output_path, "rb") as f:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
 
+        #------------------------------------------------------------Careem Section--------------------------------------------------------------------------------
         elif option == 'Careem':
             cleaner = CareemCleaner(uploaded_file)
             cleaner.clean()
@@ -107,6 +114,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
