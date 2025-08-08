@@ -45,12 +45,15 @@ if uploaded_file:
             
             # Step 4: Download button
             with open(output_path, "rb") as f:
-                st.download_button(
-                    label="Download Cleaned File",
-                    data=f,
-                    file_name=f"Cleaned_Amazon_Data.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+                file_bytes = f.read()
+
+            st.download_button(
+                label="Download Cleaned File",
+                data=file_bytes,  # actual bytes pass karo
+                file_name="Cleaned_Amazon_Data.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
         
                 
         elif option == 'Revibe':
@@ -81,6 +84,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
