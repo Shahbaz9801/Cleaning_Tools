@@ -3,6 +3,7 @@ from your_cleaning_script import NoonCleaner, AmazonCleaner, RevibeCleaner, Tala
 import os
 import tempfile
 
+st.set_page_config(page_title="Cleaning Toos", layout="centered")
 st.title("Sales Data Cleaning Tool")
 
 option = st.selectbox("Choose Marketplace", ["Noon", "Amazon", "Revibe", "Talabat", "Careem"])
@@ -114,6 +115,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
