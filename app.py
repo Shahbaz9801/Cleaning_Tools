@@ -69,14 +69,13 @@ if uploaded_file:
 
         
         #------------------------------------------------------------Revibe Section--------------------------------------------------------------------------------    
-        elif option == 'Revibe':
-            # Step 1: Temp input file save
+        elif option == 'Revibe':            # Step 1: Temp input file save
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
                 tmp_input.write(uploaded_file.getbuffer())
                 temp_input_path = tmp_input.name
             
             # Step 2: Clean file
-            cleaner = RevibwCleaner(temp_input_path)
+            cleaner = RevibeCleaner(temp_input_path)
             cleaner.clean()
             
             # Step 3: Output file save
@@ -115,6 +114,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
