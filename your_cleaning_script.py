@@ -180,17 +180,17 @@ class AmazonCleaner(BaseCleaner):
     # Brand, Partner, Category functions remain unchanged
     def get_brand_name(self, cin):
         l = str(cin).split()
-        if 'CAT' or 'Caterpiller' in l:
+        if ('CAT' or 'Caterpiller') in l:
             return 'CAT'
         elif 'Willow' in l:
             return 'The White Willow'
         elif 'Pink' in l:
             return 'The Pink Stuff'
-        elif 'WishCare??' or 'Wishcare®' or 'WishCare' in l:
+        elif ('WishCare??' or 'Wishcare®' or 'WishCare') in l:
             return 'WishCare'
-        elif 'O\'Neill' or "O\'NEILL" in l:
+        elif ('O\'Neill' or "O\'NEILL") in l:
             return 'O\'NEILL'
-        elif  'Carry' or 'Potty' in l:
+        elif  ('Carry' or 'Potty') in l:
             return 'My Carry Potty'
         elif 'Superdry' in l:
             return 'Superdry'
@@ -326,6 +326,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
