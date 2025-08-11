@@ -178,7 +178,7 @@ class AmazonCleaner(BaseCleaner):
             print(f"Error Cleaning Amazon Data: {e}")
 
     # Brand, Partner, Category functions remain unchanged
-    def get_brand_name(cin):
+    def get_brand_name(self,cin):
         l = str(cin).split()
         bn = ['WishCare',"O\'NEILL",'CAT','Superdry','Botaniq','Everteen','Hismile','RADLEY']
         for i in bn:  
