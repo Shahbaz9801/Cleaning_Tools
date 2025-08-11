@@ -178,32 +178,27 @@ class AmazonCleaner(BaseCleaner):
             print(f"Error Cleaning Amazon Data: {e}")
 
     # Brand, Partner, Category functions remain unchanged
-    def get_brand_name(self, cin):
+    def get_brand_name(cin):
         l = str(cin).split()
-        if ('CAT' or 'Caterpiller') in l:
-            return 'CAT'
-        elif 'Willow' in l:
-            return 'The White Willow'
-        elif 'Pink' in l:
-            return 'The Pink Stuff'
-        elif ('WishCare??' or 'Wishcare®' or 'WishCare') in l:
-            return 'WishCare'
-        elif ('O\'Neill' or "O\'NEILL") in l:
-            return 'O\'NEILL'
-        elif  ('Carry' or 'Potty') in l:
-            return 'My Carry Potty'
-        elif 'Superdry' in l:
-            return 'Superdry'
-        elif 'Botaniq' in l:
-            return 'Botaniq'
-        elif 'Everteen' in l:
-            return 'Everteen'
-        elif 'Hismile' in l:
-            return 'Hismile'
-        elif 'RADLEY' in l:
-            return 'RADLEY'
-        else:
-            return 'Unknown'
+        bn = ['WishCare',"O\'NEILL",'CAT','Superdry','Botaniq','Everteen','Hismile','RADLEY']
+        for i in bn:  
+            if i in l:
+                return i
+            elif 'Pink' in l:
+                return 'The Pink Stuff'
+            elif 'Willow' in l:
+                return 'The White Willow'
+            elif 'Pink' in l:
+                return 'The Pink Stuff'
+            elif 'WishCare??' in l:
+                return 'WishCare'
+            elif 'O\'Neill' in l:
+                return 'O\'NEILL'
+            elif  'Carry' in l:
+                return 'My Carry Potty'
+            elif 'Wishcare®' in l:
+                return 'WishCare'
+        return 'Unknown'
 
     def get_nub_partner(self, pid):
         if pid == 'Wishcare':
@@ -326,6 +321,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
