@@ -180,21 +180,29 @@ class AmazonCleaner(BaseCleaner):
     # Brand, Partner, Category functions remain unchanged
     def get_brand_name(self, cin):
         l = str(cin).split()
-        bn = ['WishCare', "O\'NEILL", 'CAT', 'Superdry', 'Botaniq', 'Everteen', 'Hismile', 'RADLEY']
-        for i in bn:
-            if i in l:
-                return i
-            elif 'Willow' in l:
-                return 'The White Willow'
-            elif 'Pink' in l:
-                return 'The Pink Stuff'
-            elif 'WishCare??' or 'Wishcare®' in l:
-                return 'WishCare'
-            elif 'O\'Neill' in l:
-                return 'O\'NEILL'
-            elif 'My' or 'Carry' or 'Potty' in l:
-                return 'My Carry Potty'
-        return 'Unknown'
+        if 'CAT' or 'Caterpiller' in l:
+            return 'CAT'
+        elif 'Willow' in l:
+            return 'The White Willow'
+        elif 'Pink' in l:
+            return 'The Pink Stuff'
+        elif 'WishCare??' or 'Wishcare®' or 'WishCare' in l:
+            return 'WishCare'
+        elif 'O\'Neill' or "O\'NEILL" in l:
+            return 'O\'NEILL'
+        elif  'Carry' or 'Potty' in l:
+            return 'My Carry Potty'
+        elif 'Superdry' in l:
+            return 'Superdry'
+        elif 'Botaniq' in l:
+            return 'Botaniq'
+        elif 'Everteen' in l:
+            return 'Everteen'
+        elif 'Hismile' in l:
+            return 'Hismile'
+        elif 'RADLEY' in l:
+            return 'RADLEY'
+    return 'Unknown'
 
     def get_nub_partner(self, pid):
         if pid == 'Wishcare':
@@ -207,7 +215,7 @@ class AmazonCleaner(BaseCleaner):
             return 'Null'
 
     def get_category(self, bn):
-        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff']:
+        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff','My Carry Potty']:
             return bn
         elif bn in ['CAT', "O\'NEILL", 'Superdry', 'Botaniq', 'RADLEY']:
             return 'Eyewear'
@@ -215,7 +223,7 @@ class AmazonCleaner(BaseCleaner):
             return 'Null'
 
     def get_sub_category(self, bn):
-        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff']:
+        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff','The Carry Potty']:
             return bn
         elif bn in ['CAT', "O\'NEILL", 'Superdry', 'Botaniq', 'RADLEY']:
             return 'Sunglasses'
@@ -317,4 +325,5 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
