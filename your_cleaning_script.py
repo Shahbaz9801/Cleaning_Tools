@@ -202,7 +202,8 @@ class AmazonCleaner(BaseCleaner):
             return 'Hismile'
         elif 'RADLEY' in l:
             return 'RADLEY'
-    return 'Unknown'
+        else:
+            return 'Unknown'
 
     def get_nub_partner(self, pid):
         if pid == 'Wishcare':
@@ -325,5 +326,6 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
