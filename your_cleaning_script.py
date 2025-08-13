@@ -26,7 +26,8 @@ class BaseCleaner:
         except Exception as e:
             print(f"Error Converting Date: {e}")
 
-# Noon cleaner
+# -----------------------------------------------------------------------------Noon cleaner---------------------------------------------------------------------------------
+
 class NoonCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -72,7 +73,7 @@ class NoonCleaner(BaseCleaner):
             # Replace values
             self.data['Country'] = self.data['Country'].replace({'SA':'Saudi', 'AE':'UAE'})
             self.data['Channel'] = self.data['Channel'].replace({'noon':'Noon', 'noon rocket':'Noon', 'noon instant':'Noon'})
-            self.data['Status'] = self.data['Status'].replace({'Shipped':'Delivered'})
+            self.data['Status'] = self.data['Status'].replace({'Shipped':'Delivered','Directship Shipment Created':'Delivered'})
 
             # Filter status
             self.data = self.data[~self.data['Status'].isin(['Unshipped', 'Pending','Undelivered','Confirmed','Created','Exported','Fulfilling'])]
@@ -87,11 +88,13 @@ class NoonCleaner(BaseCleaner):
             return 'Nub-Partner 181587'
         elif pid in [47461, '47461']:
             return 'Nub-Partner 47461'
+        elif pid in [74949,'74949']:
+            return 'Nub-Partner 74949'
         else:
             return 'Null'
 
 
-# Amazon Cleaner 
+# --------------------------------------------------------------------- Amazon Cleaner -------------------------------------------------------------------------------------
 class AmazonCleaner(BaseCleaner):
     def __init__(self, file_path):
         super().__init__(file_path)
@@ -331,6 +334,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
