@@ -32,7 +32,7 @@ if uploaded_file:
 
             # Step 4: Data preview before download
             st.subheader("Preview of Cleaned Data")
-            st.dataframe(cleaner.data.head(50))  # first 50 rows preview
+            st.dataframe(cleaner.data) 
         
             # Step 5: Download button
             with open(output_path, "rb") as f:
@@ -59,8 +59,12 @@ if uploaded_file:
             output_fd, output_path = tempfile.mkstemp(suffix=".xlsx")
             os.close(output_fd)  # close handle, warna Windows block karega
             cleaner.save_data(output_path)
-        
-            # Step 4: Download button
+
+            # Step 4: Data preview before download
+            st.subheader("Preview of Cleaned Data")
+            st.dataframe(cleaner.data)
+            
+            # Step 5: Download button
             with open(output_path, "rb") as f:
                 st.download_button(
                     label="Download Cleaned File",
@@ -86,8 +90,12 @@ if uploaded_file:
             output_fd, output_path = tempfile.mkstemp(suffix=".xlsx")
             os.close(output_fd)  # close handle, warna Windows block karega
             cleaner.save_data(output_path)
-        
-            # Step 4: Download button
+            
+            # Step 4: Data preview before download
+            st.subheader("Preview of Cleaned Data")
+            st.dataframe(cleaner.data)
+            
+            # Step 5: Download button
             with open(output_path, "rb") as f:
                 st.download_button(
                     label="Download Cleaned File",
@@ -118,6 +126,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
