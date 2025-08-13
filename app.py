@@ -33,7 +33,9 @@ if uploaded_file:
             # Step 4: Data preview before download
             st.subheader("Preview of Cleaned Data")
             st.dataframe(cleaner.data) 
-        
+            
+            st.success("Data Cleaned Successfully!")
+            
             # Step 5: Download button
             with open(output_path, "rb") as f:
                 st.download_button(
@@ -42,7 +44,7 @@ if uploaded_file:
                     file_name="Cleaned_Noon_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-            st.success("Data Cleaned Successfully!")
+            
             
         #------------------------------------------------------------Amazon Section--------------------------------------------------------------------------------          
         elif option == 'Amazon':
@@ -63,6 +65,8 @@ if uploaded_file:
             # Step 4: Data preview before download
             st.subheader("Preview of Cleaned Data")
             st.dataframe(cleaner.data)
+
+            st.success("Data Cleaned Successfully!")
             
             # Step 5: Download button
             with open(output_path, "rb") as f:
@@ -73,7 +77,7 @@ if uploaded_file:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
         
-            st.success("Data Cleaned Successfully!")
+        
 
         
         #------------------------------------------------------------Revibe Section--------------------------------------------------------------------------------    
@@ -94,6 +98,8 @@ if uploaded_file:
             # Step 4: Data preview before download
             st.subheader("Preview of Cleaned Data")
             st.dataframe(cleaner.data)
+
+            st.success("Data Cleaned Successfully!")
             
             # Step 5: Download button
             with open(output_path, "rb") as f:
@@ -103,7 +109,7 @@ if uploaded_file:
                     file_name="Cleaned_Revibe_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-            st.success("Data Cleaned Successfully!")
+            
 
         #------------------------------------------------------------Talabat Section--------------------------------------------------------------------------------
         elif option == 'Talabat':
@@ -126,6 +132,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
