@@ -149,6 +149,9 @@ class AmazonCleaner(BaseCleaner):
             self.convert_date('Date')
             self.data['Date'] = pd.to_datetime(self.data['Date'].dt.date)
 
+            #fill null value in sales column == 0
+            self.data['Sales price'] = self.data['Sales price'].fillna(0)
+
             # Add Month, Month Number, Year
             self.data.insert(1, 'Month', self.data['Date'].dt.strftime('%B'))
             self.data.insert(2, 'Month Number', self.data['Date'].dt.month)
@@ -180,25 +183,32 @@ class AmazonCleaner(BaseCleaner):
     # Brand, Partner, Category functions remain unchanged
     def get_brand_name(self,cin):
         l = str(cin).split()
-        bn = ['WishCare',"O\'NEILL",'CAT','Superdry','Botaniq','Everteen','Hismile','RADLEY']
-        for i in bn:  
-            if i in l:
-                return i
-            elif 'Pink' in l:
-                return 'The Pink Stuff'
-            elif 'Willow' in l:
-                return 'The White Willow'
-            elif 'Pink' in l:
-                return 'The Pink Stuff'
-            elif 'WishCare??' in l:
-                return 'WishCare'
-            elif 'O\'Neill' in l:
-                return 'O\'NEILL'
-            elif  'Carry' in l:
-                return 'My Carry Potty'
-            elif 'Wishcare®' in l:
-                return 'WishCare'
-        return 'Unknown'
+        if ('CAT' in l) or ('Caterpiller' in l):
+            return 'CAT'
+        elif 'Pink' in l:
+            return 'The Pink Stuff'
+        elif 'Willow' in l:
+            return 'The White Willow'
+        elif ('Pink' in l) or ('Stuff' in l):
+            return 'The Pink Stuff'
+        elif ('WishCare??' in l) or ('Wishcare' in l) or ('Wishcare®' in l) or ('WishCare' in l):
+            return 'WishCare'
+        elif ('O\'Neill' in l) or ("O\'NEILL" in l):
+            return 'O\'NEILL'
+        elif  ('Carry' in l) or ('Potty' in l):
+            return 'My Carry Potty'
+        elif 'Superdry' in l:
+            return 'Superdry'
+        elif 'Botaniq' in l:
+            return 'Botaniq'
+        elif 'Everteen' in l:
+            return 'Everteen'
+        elif 'Hismile' in l:
+            return 'Hismile'
+        elif 'RADLEY' in l:
+            return 'RADLEY'
+        else:
+            return 'Unknown'
 
     def get_nub_partner(self, pid):
         if pid == 'Wishcare':
@@ -219,7 +229,7 @@ class AmazonCleaner(BaseCleaner):
             return 'Null'
 
     def get_sub_category(self, bn):
-        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff','The Carry Potty']:
+        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff','My Carry Potty']:
             return bn
         elif bn in ['CAT', "O\'NEILL", 'Superdry', 'Botaniq', 'RADLEY']:
             return 'Sunglasses'
@@ -321,6 +331,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
