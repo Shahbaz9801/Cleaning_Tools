@@ -263,7 +263,7 @@ class RevibeCleaner(BaseCleaner):
 
             # ✅ Step 3: Convert Date Format and Strip Time
             self.convert_date('Date')
-            self.data['Date'] = pd.to_datetime(self.data['Date'].dt.date)
+            self.data['Date'] = pd.to_datetime(self.data['Date'], dayfirst=True).dt.normalize()
 
             # ✅ Step 4: Add Month, Month Number, Year Columns
             self.data.insert(1, 'Month', self.data['Date'].dt.strftime('%B'))
