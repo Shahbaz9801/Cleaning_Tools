@@ -94,7 +94,9 @@ class NoonCleaner(BaseCleaner):
             return 'Null'
 
 
-# --------------------------------------------------------------------- Amazon Cleaner -------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------- Amazon Cleaner -------------------------------------------------------------------------------------
+
+
 class AmazonCleaner(BaseCleaner):
     def __init__(self, file_path):
         super().__init__(file_path)
@@ -239,7 +241,7 @@ class AmazonCleaner(BaseCleaner):
         else:
             return 'Null'
 
-# Revibe Cleaner
+# ---------------------------------------------------------------------------------Revibe Cleaner----------------------------------------------------------------------------
 class RevibeCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -263,7 +265,9 @@ class RevibeCleaner(BaseCleaner):
 
             # ✅ Step 3: Convert Date Format and Strip Time
             self.convert_date('Date')
-            self.data['Date'] = pd.to_datetime(self.data['Date'], dayfirst=True).dt.normalize()
+            self.data['Date'] = pd.to_datetime(self.data['Date'], dayfirst=True)
+            self.data['Date'] = self.data['Date'].dt.strftime("%m/%d/%Y")
+
 
             # ✅ Step 4: Add Month, Month Number, Year Columns
             self.data.insert(1, 'Month', self.data['Date'].dt.strftime('%B'))
@@ -298,6 +302,8 @@ class RevibeCleaner(BaseCleaner):
         except Exception as e:
             print(f"❌ Error Cleaning Revibe Data: {e}")
 
+# -------------------------------------------------------------------------------------Talabat Cleanre-----------------------------------------------------------------------
+
 class TalabatCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -307,6 +313,7 @@ class TalabatCleaner(BaseCleaner):
         except Exception as e:
             print(f"Error Cleaning Talabat Data: {e}")
 
+# --------------------------------------------------------------------------------------Careem Cleaner-----------------------------------------------------------------------
 class CareemCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -334,6 +341,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
