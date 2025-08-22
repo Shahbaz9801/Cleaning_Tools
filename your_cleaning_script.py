@@ -26,6 +26,16 @@ class BaseCleaner:
         except Exception as e:
             print(f"Error Converting Date: {e}")
 
+    
+    def convert_date1(self, column_name):
+        try:
+            # Har row pe parser chalayenge jo mixed formats handle kare
+            self.data[column_name] = self.data[column_name].apply(
+                lambda x: parser.parse(str(x), dayfirst=True) if pd.notnull(x) else None
+            )
+        except Exception as e:
+            print(f"Error Converting Date: {e}")
+
 # -----------------------------------------------------------------------------Noon cleaner---------------------------------------------------------------------------------
 
 class NoonCleaner(BaseCleaner):
@@ -263,10 +273,11 @@ class RevibeCleaner(BaseCleaner):
                 'Actual Cost': 'Sales Price'
             })
 
-            # ✅ Step 3: Convert Date Format and Strip Time
-            self.convert_date('Date')
-            self.data['Date'] = pd.to_datetime(self.data['Date'], dayfirst=True)
-            self.data['Date'] = self.data['Date'].dt.strftime("%m/%d/%Y")
+            # ✅ Step 3: Convert Date Format
+            self.convert_date1('Date')
+            # Ab Date column ko standard format me set kar do (YYYY-MM-DD HH:MM:SS)
+            self.data['Date'] = pd.to_datetime(self.data['Date'])
+            self.data['Date'] = pd.to_datetime(self.data['Date'].dt.date)
 
 
             # ✅ Step 4: Add Month, Month Number, Year Columns
@@ -341,6 +352,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
