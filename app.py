@@ -15,6 +15,7 @@ if uploaded_file:
 
     if st.button("Clean Data"):
         #------------------------------------------------------------Noon Section--------------------------------------------------------------------------------
+        if option == 'Noon':
             # Step 1: Temp input file save
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
                 tmp_input.write(uploaded_file.getbuffer())
@@ -43,7 +44,8 @@ if uploaded_file:
                     file_name="Cleaned_Amazon_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-            
+        
+        
         #------------------------------------------------------------Amazon Section--------------------------------------------------------------------------------          
         elif option == 'Amazon':
             # Step 1: Temp input file save
@@ -130,6 +132,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
