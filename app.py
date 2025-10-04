@@ -16,14 +16,10 @@ if uploaded_file:
     if st.button("Clean Data"):
         #------------------------------------------------------------Noon Section--------------------------------------------------------------------------------
         if option == "Noon":
-            # # Step 1: Temp input file save
-            # with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
-            #     tmp_input.write(uploaded_file.getbuffer())
-            #     temp_input_path = tmp_input.name
-            file_ext = os.path.splitext(uploaded_file.name)[1]  # original extension
-            with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_input:
-                tmp_input.write(uploaded_file.getbuffer())
-                temp_input_path = tmp_input.name
+             # Step 1: Temp input file save
+             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
+                 tmp_input.write(uploaded_file.getbuffer())
+                 temp_input_path = tmp_input.name
 
             
             # Step 2: Clean file
@@ -137,6 +133,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
