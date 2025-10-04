@@ -15,12 +15,10 @@ if uploaded_file:
 
     if st.button("Clean Data"):
         #------------------------------------------------------------Noon Section--------------------------------------------------------------------------------
-        if option == "Noon":
-             # Step 1: Temp input file save
-             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
-                 tmp_input.write(uploaded_file.getbuffer())
-                 temp_input_path = tmp_input.name
-
+            # Step 1: Temp input file save
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_input:
+                tmp_input.write(uploaded_file.getbuffer())
+                temp_input_path = tmp_input.name
             
             # Step 2: Clean file
             cleaner = NoonCleaner(temp_input_path)
@@ -33,8 +31,8 @@ if uploaded_file:
 
             # Step 4: Data preview before download
             st.subheader("Preview of Cleaned Data")
-            st.dataframe(cleaner.data) 
-            
+            st.dataframe(cleaner.data)
+
             st.success("Data Cleaned Successfully!")
             
             # Step 5: Download button
@@ -42,10 +40,9 @@ if uploaded_file:
                 st.download_button(
                     label="Download Cleaned File",
                     data=f,
-                    file_name="Cleaned_Noon_Data.xlsx",
+                    file_name="Cleaned_Amazon_Data.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-            
             
         #------------------------------------------------------------Amazon Section--------------------------------------------------------------------------------          
         elif option == 'Amazon':
@@ -133,6 +130,7 @@ if uploaded_file:
                 st.download_button("Download Cleaned File", f, file_name=output_path)
         else:
             st.warning(f"{option} cleaning not yet implemented.")
+
 
 
 
