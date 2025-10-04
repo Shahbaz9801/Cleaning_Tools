@@ -9,10 +9,17 @@ class BaseCleaner:
 
     def read_data(self):
         try:
-            self.data = pd.read_csv(self.file_path)
+            if self.file_path.endswith(".csv"):
+                self.data = pd.read_csv(self.file_path)
+            elif self.file_path.endswith(".xlsx") or self.file_path.endswith(".xls"):
+                self.data = pd.read_excel(self.file_path, engine="openpyxl")
+            else:
+                raise ValueError("Unsupported file format. Please upload CSV or Excel.")
+            
             print(f"Data Loaded: {self.data.shape}")
         except Exception as e:
             print(f"Error Reading File: {e}")
+            self.data = pd.DataFrame()  # empty rakhe agar error aaye
 
     def save_data(self, output_file):
         try:
@@ -353,6 +360,7 @@ if __name__ == "__main__":
     revibe.clean()
 
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
