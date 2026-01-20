@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from dateutil import parser
+master_df = pd.read_csv('product.csv')
 
 class BaseCleaner:
     def __init__(self, file_path):
@@ -13,7 +14,6 @@ class BaseCleaner:
             print(f"Data Loaded: {self.data.shape}")
         except Exception as e:
             print(f"Error Reading File: {e}")
-
 
     def save_data(self, output_file):
         try:
@@ -28,7 +28,6 @@ class BaseCleaner:
         except Exception as e:
             print(f"Error Converting Date: {e}")
 
-    
     def convert_date1(self, column_name):
         try:
             # Har row pe parser chalayenge jo mixed formats handle kare
@@ -38,60 +37,99 @@ class BaseCleaner:
         except Exception as e:
             print(f"Error Converting Date: {e}")
 
-# -----------------------------------------------------------------------------Noon cleaner---------------------------------------------------------------------------------
-
+# Noon cleaner
 class NoonCleaner(BaseCleaner):
     def clean(self):
         try:
             self.read_data()
-            self.data = self.data[['ordered_date','item_nr','sku','item_status','id_partner','country_code',
-                                   'brand_en','family','product_subtype','marketplace','title_en',
-                                   'is_fbn','base_price']]
+            
+            # Select and rename columns
+            self.data = self.data[['order_timestamp','item_nr','sku','status','id_partner','country_code',
+                                   'partner_sku','fulfillment_model','offer_price']]
 
             self.data = self.data.rename(columns={
-                'ordered_date':'Date',
+                'order_timestamp':'Date',
                 'item_nr':'Order Number',
                 'sku':'SKU',
-                'item_status':'Status',
+                'status':'Status',
                 'id_partner':'Partner Id',
                 'country_code':'Country',
-                'brand_en':'Brand Name',
-                'family':'Category',
-                'product_subtype':'Sub-Category',
-                'marketplace':'Channel',
-                'title_en':'Channel Item Name',
-                'is_fbn':'Fullfilment',
-                'base_price':'Sales Price'
+                'partner_sku': 'Partner SKU',
+                'fulfillment_model':'Fullfilment',
+                'offer_price':'Sales_Price'
             })
 
-
+            # Date conversion
             self.convert_date('Date')
 
-            # Add Month, Month Number, Year Column
+            # Add Month, Month Number, Year
             self.data.insert(1, 'Month', self.data['Date'].dt.strftime('%B'))
             self.data.insert(2, 'Month Number', self.data['Date'].dt.month)
             self.data.insert(3, 'Year', self.data['Date'].dt.year)
 
-            # Add Nub Partner column
+            # Nub Partner
             self.data.insert(8, 'Nub Partner', self.data['Partner Id'].apply(self.get_nub_partner))
 
-            # Add Partner SKU Column
-            self.data.insert(15,'Partner SKU',self.data['Order Number'])
+            self.data.insert(10,'Brand Name'," ")
 
-            # Units and GMV Column
-            self.data.insert(18, 'Units', 1)
-            self.data.insert(19, 'GMV', self.data['Sales Price'] * self.data['Units'])
+            # Blank columns initialization
+            self.data.insert(11,'Category'," ")
+            self.data.insert(12,'Sub-Category'," ")
+            self.data.insert(13,'Channel','Noon')
+            self.data.insert(14,'Channel Item Name'," ")
 
-            # Replace values
+            # Other columns
+            self.data.insert(18, 'QTY', 1)
+            self.data.insert(19, 'GMV', self.data['Sales_Price'] * self.data['QTY'])
+
+            # Filter irrelevant statuses
+            self.data = self.data[~self.data['Status'].isin([
+                'Unshipped', 'Pending','Undelivered','Confirmed','Created','Exported','Fulfilling','Could Not Be Delivered'
+            ])]
+
+            # Replace Country / Status / Fulfilment values
             self.data['Country'] = self.data['Country'].replace({'SA':'Saudi', 'AE':'UAE'})
-            self.data['Channel'] = self.data['Channel'].replace({'noon':'Noon', 'noon rocket':'Noon', 'noon instant':'Noon'})
-            self.data['Status'] = self.data['Status'].replace({'Shipped':'Delivered','Directship Shipment Created':'Delivered'})
+            self.data['Status'] = self.data['Status'].replace({'Shipped':'Delivered','CIR':'Cancelled'})
+            self.data['Fullfilment'] = self.data['Fullfilment'].replace({
+                'Fulfilled by Noon (FBN)':'FBN',
+                'Fulfilled by Noon (FBP)':'FBP'
+            })
 
-            # Filter status
-            self.data = self.data[~self.data['Status'].isin(['Unshipped', 'Pending','Undelivered','Confirmed','Created','Exported','Fulfilling'])]
+            # ===============================
+            # ✅ FILL BLANKS FROM MASTER CSV
+            # ===============================
+            master_df = pd.read_csv('product.csv')
+            # Clean SKU columns
+            self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
+            master_df['SKU'] = master_df['SKU'].astype(str).str.strip()
+
+            # Convert blanks to NaN
+            self.data[['Brand Name','Category','Sub-Category','Channel Item Name']] = \
+                self.data[['Brand Name','Category','Sub-Category','Channel Item Name']].replace(r'^\s*$', np.nan, regex=True)
+
+            # Lookup merge (SKU basis)
+            lookup = self.data[['SKU']].merge(
+                master_df[['SKU','Brand','Category','Sub-Category','Product Titles']],
+                on='SKU',
+                how='left'
+            )
+
+            # Fill only blank values
+            self.data['Brand Name'] = self.data['Brand Name'].fillna(lookup['Brand'])
+            self.data['Category'] = self.data['Category'].fillna(lookup['Category'])
+            self.data['Sub-Category'] = self.data['Sub-Category'].fillna(lookup['Sub-Category'])
+            self.data['Channel Item Name'] = self.data['Channel Item Name'].fillna(lookup['Product Titles'])
+
+            # ===============================
+            # ✅ SET GMV = 0 WHERE STATUS IS CANCELLED
+            # ===============================
+            self.data.loc[self.data['Status']=='Cancelled', 'GMV'] = 0
+
             print(f"Cleaned Data Shape: {self.data.shape}")
+
         except Exception as e:
             print(f"Error Cleaning Noon Data: {e}")
+
 
     def get_nub_partner(self, pid):
         if pid in [46272, '46272']:
@@ -100,15 +138,13 @@ class NoonCleaner(BaseCleaner):
             return 'Nub-Partner 181587'
         elif pid in [47461, '47461']:
             return 'Nub-Partner 47461'
-        elif pid in [74949,'74949']:
+        elif pid in [74949, '74949']:
             return 'Nub-Partner 74949'
         else:
             return 'Null'
 
 
-# -------------------------------------------------------------------------- Amazon Cleaner -------------------------------------------------------------------------------------
-
-
+# Amazon Cleaner 
 class AmazonCleaner(BaseCleaner):
     def __init__(self, file_path):
         super().__init__(file_path)
@@ -166,7 +202,6 @@ class AmazonCleaner(BaseCleaner):
             self.convert_date('Date')
             self.data['Date'] = pd.to_datetime(self.data['Date'].dt.date)
 
-            #fill null value in sales column == 0
             self.data['Sales price'] = self.data['Sales price'].fillna(0)
 
             # Add Month, Month Number, Year
@@ -176,9 +211,9 @@ class AmazonCleaner(BaseCleaner):
 
             # Nub Partner and Brand
             self.data.insert(8, 'Nub Partner', self.data['Partner ID'].apply(self.get_nub_partner))
-            self.data.insert(10, 'Brand Name', self.data['Channel Item Name'].apply(self.get_brand_name))
-            self.data.insert(11, 'Category', self.data['Brand Name'].apply(self.get_category))
-            self.data.insert(12, 'Sub-Category', self.data['Brand Name'].apply(self.get_sub_category))
+            self.data.insert(10, 'Brand Name', " ")
+            self.data.insert(11, 'Category', " ")
+            self.data.insert(12, 'Sub-Category', " ")
 
             # GMV
             self.data.insert(19, 'GMV', self.data['Sales price'] * self.data['QTY'])
@@ -193,39 +228,43 @@ class AmazonCleaner(BaseCleaner):
             self.data['Status'] = self.data['Status'].replace({'Shipped': 'Delivered'})
             self.data['Fulfillment'] = self.data['Fulfillment'].replace({'Amazon': 'FBA'})
 
+            # ===============================
+            # ✅ FILL BLANKS FROM MASTER CSV (SKU ↔ Partner SKU)
+            # ===============================
+
+            master_df = pd.read_csv('product.csv')
+
+            # Clean columns
+            self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
+            master_df['Partner SKU'] = master_df['Partner SKU'].astype(str).str.strip()
+
+            # Convert blank strings to NaN
+            cols = ['Brand Name', 'Category', 'Sub-Category']
+            self.data[cols] = self.data[cols].replace(r'^\s*$', np.nan, regex=True)
+
+            # 🔥 Lookup merge (SKU → Partner SKU)
+            lookup = self.data[['SKU']].merge(
+                master_df[['Partner SKU', 'Brand', 'Category', 'Sub-Category']],
+                left_on='SKU',
+                right_on='Partner SKU',
+                how='left'
+            )
+
+            # Fill only blank values
+            self.data['Brand Name'] = self.data['Brand Name'].fillna(lookup['Brand'])
+            self.data['Category'] = self.data['Category'].fillna(lookup['Category'])
+            self.data['Sub-Category'] = self.data['Sub-Category'].fillna(lookup['Sub-Category'])
+
+            # ===============================
+            # ✅ SET GMV = 0 WHERE STATUS IS CANCELLED
+            # ===============================
+            self.data.loc[self.data['Status']=='Cancelled', 'QTY'] = 1
+
+
             print(f"Cleaned Amazon Data Shape: {self.data.shape}")
         except Exception as e:
             print(f"Error Cleaning Amazon Data: {e}")
 
-    # Brand, Partner, Category functions remain unchanged
-    def get_brand_name(self,cin):
-        l = str(cin).split()
-        if ('CAT' in l) or ('Caterpiller' in l):
-            return 'CAT'
-        elif 'Pink' in l:
-            return 'The Pink Stuff'
-        elif 'Willow' in l:
-            return 'The White Willow'
-        elif ('Pink' in l) or ('Stuff' in l):
-            return 'The Pink Stuff'
-        elif ('WishCare??' in l) or ('Wishcare' in l) or ('Wishcare®' in l) or ('WishCare' in l):
-            return 'WishCare'
-        elif ('O\'Neill' in l) or ("O\'NEILL" in l):
-            return 'O\'NEILL'
-        elif  ('Carry' in l) or ('Potty' in l):
-            return 'My Carry Potty'
-        elif 'Superdry' in l:
-            return 'Superdry'
-        elif 'Botaniq' in l:
-            return 'Botaniq'
-        elif 'Everteen' in l:
-            return 'Everteen'
-        elif 'Hismile' in l:
-            return 'Hismile'
-        elif 'RADLEY' in l:
-            return 'RADLEY'
-        else:
-            return 'Unknown'
 
     def get_nub_partner(self, pid):
         if pid == 'Wishcare':
@@ -237,23 +276,8 @@ class AmazonCleaner(BaseCleaner):
         else:
             return 'Null'
 
-    def get_category(self, bn):
-        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff','My Carry Potty']:
-            return bn
-        elif bn in ['CAT', "O\'NEILL", 'Superdry', 'Botaniq', 'RADLEY']:
-            return 'Eyewear'
-        else:
-            return 'Null'
 
-    def get_sub_category(self, bn):
-        if bn in ['WishCare', 'The White Willow', 'The Pink Stuff','My Carry Potty']:
-            return bn
-        elif bn in ['CAT', "O\'NEILL", 'Superdry', 'Botaniq', 'RADLEY']:
-            return 'Sunglasses'
-        else:
-            return 'Null'
-
-# ---------------------------------------------------------------------------------Revibe Cleaner----------------------------------------------------------------------------
+# Revibe Cleaner
 class RevibeCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -275,12 +299,11 @@ class RevibeCleaner(BaseCleaner):
                 'Actual Cost': 'Sales Price'
             })
 
-            # ✅ Step 3: Convert Date Format
+
             self.convert_date1('Date')
             # Ab Date column ko standard format me set kar do (YYYY-MM-DD HH:MM:SS)
             self.data['Date'] = pd.to_datetime(self.data['Date'])
             self.data['Date'] = pd.to_datetime(self.data['Date'].dt.date)
-
 
             # ✅ Step 4: Add Month, Month Number, Year Columns
             self.data.insert(1, 'Month', self.data['Date'].dt.strftime('%B'))
@@ -315,8 +338,6 @@ class RevibeCleaner(BaseCleaner):
         except Exception as e:
             print(f"❌ Error Cleaning Revibe Data: {e}")
 
-# -------------------------------------------------------------------------------------Talabat Cleanre-----------------------------------------------------------------------
-
 class TalabatCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -326,7 +347,6 @@ class TalabatCleaner(BaseCleaner):
         except Exception as e:
             print(f"Error Cleaning Talabat Data: {e}")
 
-# --------------------------------------------------------------------------------------Careem Cleaner-----------------------------------------------------------------------
 class CareemCleaner(BaseCleaner):
     def clean(self):
         try:
@@ -352,17 +372,4 @@ if __name__ == "__main__":
     # Revibe Data Cleaning
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
-
     revibe.save_data("Clean_Revibe_Data.xlsx")
-
-
-
-
-
-
-
-
-
-
-
-
