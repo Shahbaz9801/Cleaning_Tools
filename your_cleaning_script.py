@@ -93,39 +93,68 @@ class NoonCleaner(BaseCleaner):
             self.data['Fullfilment'] = self.data['Fullfilment'].replace({'Fulfilled by Noon (FBN)':'FBN','Fulfilled by Partner (FBP)':'FBP'})
 
             # ===============================
-            # ✅ FILL BLANKS FROM MASTER CSV
+            # ✅ FILL BLANKS FROM MASTER CSV (SKU BASIS – BULLETPROOF)
             # ===============================
+            
+            # Read master
             master_df = pd.read_csv('product.csv')
-            # Clean SKU columns
-            self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
-            master_df['SKU'] = master_df['SKU'].astype(str).str.strip()
-
-            # Convert blanks to NaN
-            self.data[['Brand Name','Category','Sub-Category','Channel Item Name']] = \
-                self.data[['Brand Name','Category','Sub-Category','Channel Item Name']].replace(r'^\s*$', np.nan, regex=True)
-
-            # Lookup merge (SKU basis)
+            
+            # ---------- SKU CLEAN FUNCTION ----------
+            def clean_sku(x):
+                return (
+                    str(x)
+                    .strip()
+                    .replace('\xa0', '')   # non-breaking space
+                    .replace('–', '-')    # en dash
+                    .replace('—', '-')    # em dash
+                    .replace('-', '-')    # non-breaking hyphen
+                    .upper()
+                )
+            
+            # Clean SKU in both tables
+            self.data['SKU'] = self.data['SKU'].apply(clean_sku)
+            master_df['SKU'] = master_df['SKU'].apply(clean_sku)
+            
+            # ---------- REMOVE DUPLICATES FROM MASTER ----------
+            master_df = master_df.drop_duplicates(subset=['SKU'], keep='first')
+            
+            # ---------- CONVERT BLANK STRINGS TO NaN ----------
+            cols_to_fix = ['Brand Name', 'Category', 'Sub-Category', 'Channel Item Name']
+            self.data[cols_to_fix] = self.data[cols_to_fix].replace(
+                r'^\s*$', np.nan, regex=True
+            )
+            
+            # ---------- LOOKUP MERGE (SKU BASIS) ----------
             lookup = self.data[['SKU']].merge(
-                master_df[['SKU','Brand','Category','Sub-Category','Product Titles']],
+                master_df[['SKU', 'Brand', 'Category', 'Sub-Category', 'Product Titles']],
                 on='SKU',
                 how='left'
             )
-
-            # Fill only blank values
+            
+            # ---------- FILL ONLY BLANK VALUES ----------
             self.data['Brand Name'] = self.data['Brand Name'].fillna(lookup['Brand'])
             self.data['Category'] = self.data['Category'].fillna(lookup['Category'])
             self.data['Sub-Category'] = self.data['Sub-Category'].fillna(lookup['Sub-Category'])
-            self.data['Channel Item Name'] = self.data['Channel Item Name'].fillna(lookup['Product Titles'])
-
+            self.data['Channel Item Name'] = self.data['Channel Item Name'].fillna(
+                lookup['Product Titles']
+            )
+            
             # ===============================
             # ✅ SET GMV = 0 WHERE STATUS IS CANCELLED
             # ===============================
-            self.data.loc[self.data['Status']=='Cancelled', 'GMV'] = 0
-
-            print(f"Cleaned Data Shape: {self.data.shape}")
-
-        except Exception as e:
-            print(f"Error Cleaning Noon Data: {e}")
+            self.data.loc[self.data['Status'] == 'Cancelled', 'GMV'] = 0
+            
+            # ===============================
+            # ✅ OPTIONAL DEBUG – UNMATCHED SKUs
+            # ===============================
+            unmatched_skus = self.data[
+                self.data['Category'].isna()
+            ]['SKU'].unique()
+            
+            print(f"❌ Unmatched SKU Count: {len(unmatched_skus)}")
+            print("❌ Sample Unmatched SKUs:", unmatched_skus[:10])
+                    except Exception as e:
+                        print(f"Error Cleaning Noon Data: {e}")
 
 
     def get_nub_partner(self, pid):
@@ -370,5 +399,6 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
