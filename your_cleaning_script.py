@@ -93,56 +93,44 @@ class NoonCleaner(BaseCleaner):
             self.data['Fullfilment'] = self.data['Fullfilment'].replace({'Fulfilled by Noon (FBN)':'FBN','Fulfilled by Partner (FBP)':'FBP'})
 
             # ===============================
-            # ✅ MASTER CSV SKU MAPPING (CORRECT WAY)
+            # FILL BLANKS FROM MASTER CSV (SKU BASIS – FIXED)
             # ===============================
             
-            # ---------- CLEAN FUNCTION ----------
-            def clean_text(x):
-                return (
-                    str(x)
-                    .strip()
-                    .replace('\xa0', '')
-                    .replace('–', '-')
-                    .replace('—', '-')
-                    .upper()
-                )
+            # Clean SKU
+            self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
+            master_df['SKU'] = master_df['SKU'].astype(str).str.strip()
             
-            # Clean SKU everywhere
-            self.data['SKU'] = self.data['SKU'].apply(clean_text)
-            master_df['SKU'] = master_df['SKU'].apply(clean_text)
-            
-            # Convert blanks to NaN (VERY IMPORTANT)
+            # Convert blank strings to NaN
             cols = ['Brand Name', 'Category', 'Sub-Category', 'Channel Item Name']
             self.data[cols] = self.data[cols].replace(r'^\s*$', np.nan, regex=True)
             
-            # Remove duplicate SKU from master
+            # Remove duplicate SKU from master (IMPORTANT)
             master_df = master_df.drop_duplicates(subset='SKU')
             
-            # ---------- CREATE LOOKUP MAPS ----------
-            brand_map = master_df.set_index('SKU')['Brand'].to_dict()
-            cat_map   = master_df.set_index('SKU')['Category'].to_dict()
-            sub_map   = master_df.set_index('SKU')['Sub-Category'].to_dict()
-            title_map = master_df.set_index('SKU')['Product Titles'].to_dict()
+            # MERGE FULL DATA (SKU BASIS)
+            self.data = self.data.merge(
+                master_df[['SKU', 'Brand', 'Category', 'Sub-Category', 'Product Titles']],
+                on='SKU',
+                how='left',
+                suffixes=('', '_master')
+            )
             
-            # ---------- FILL ONLY BLANK VALUES ----------
-            self.data.loc[self.data['Brand Name'].isna(), 'Brand Name'] = \
-                self.data.loc[self.data['Brand Name'].isna(), 'SKU'].map(brand_map)
+            # Fill blanks using merged columns
+            self.data['Brand Name'] = self.data['Brand Name'].fillna(self.data['Brand'])
+            self.data['Category'] = self.data['Category'].fillna(self.data['Category_master'])
+            self.data['Sub-Category'] = self.data['Sub-Category'].fillna(self.data['Sub-Category_master'])
+            self.data['Channel Item Name'] = self.data['Channel Item Name'].fillna(self.data['Product Titles'])
             
-            self.data.loc[self.data['Category'].isna(), 'Category'] = \
-                self.data.loc[self.data['Category'].isna(), 'SKU'].map(cat_map)
-            
-            self.data.loc[self.data['Sub-Category'].isna(), 'Sub-Category'] = \
-                self.data.loc[self.data['Sub-Category'].isna(), 'SKU'].map(sub_map)
-            
-            self.data.loc[self.data['Channel Item Name'].isna(), 'Channel Item Name'] = \
-                self.data.loc[self.data['Channel Item Name'].isna(), 'SKU'].map(title_map)
+            # Drop helper columns
+            self.data.drop(
+                columns=['Brand', 'Category_master', 'Sub-Category_master', 'Product Titles'],
+                inplace=True
+            )
             
             # ===============================
-            # ✅ GMV = 0 WHERE STATUS CANCELLED
+            # ✅ GMV = 0 WHERE STATUS IS CANCELLED
             # ===============================
             self.data.loc[self.data['Status'] == 'Cancelled', 'GMV'] = 0
-            print(f"Cleaned Data Shape: {self.data.shape}")
-
         except Exception as e:
             print(f"Error Cleaning Noon Data: {e}")
 
@@ -386,6 +374,7 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
