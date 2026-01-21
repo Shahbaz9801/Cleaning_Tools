@@ -146,15 +146,15 @@ class NoonCleaner(BaseCleaner):
             
             # ===============================
             # ✅ OPTIONAL DEBUG – UNMATCHED SKUs
-            # ===============================
-            unmatched_skus = self.data[
-                self.data['Category'].isna()
-            ]['SKU'].unique()
+            # # ===============================
+            # unmatched_skus = self.data[
+            #     self.data['Category'].isna()
+            # ]['SKU'].unique()
             
-            print(f"❌ Unmatched SKU Count: {len(unmatched_skus)}")
-            print("❌ Sample Unmatched SKUs:", unmatched_skus[:10])
-                    except Exception as e:
-                        print(f"Error Cleaning Noon Data: {e}")
+            # print(f"❌ Unmatched SKU Count: {len(unmatched_skus)}")
+            # print("❌ Sample Unmatched SKUs:", unmatched_skus[:10])
+            #         except Exception as e:
+            #             print(f"Error Cleaning Noon Data: {e}")
 
 
     def get_nub_partner(self, pid):
@@ -399,6 +399,7 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
