@@ -96,9 +96,6 @@ class NoonCleaner(BaseCleaner):
             # ✅ FILL BLANKS FROM MASTER CSV (SKU BASIS – BULLETPROOF)
             # ===============================
             
-            # Read master
-            master_df = pd.read_csv('product.csv')
-            
             # ---------- SKU CLEAN FUNCTION ----------
             def clean_sku(x):
                 return (
@@ -399,6 +396,7 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
