@@ -90,10 +90,7 @@ class NoonCleaner(BaseCleaner):
             # Replace Country / Status / Fulfilment values
             self.data['Country'] = self.data['Country'].replace({'SA':'Saudi', 'AE':'UAE'})
             self.data['Status'] = self.data['Status'].replace({'Shipped':'Delivered','CIR':'Cancelled'})
-            self.data['Fullfilment'] = self.data['Fullfilment'].replace({
-                'Fulfilled by Noon (FBN)':'FBN',
-                'Fulfilled by Noon (FBP)':'FBP'
-            })
+            self.data['Fullfilment'] = self.data['Fullfilment'].replace({'Fulfilled by Noon (FBN)':'FBN','Fulfilled by Partner (FBP)':'FBP'})
 
             # ===============================
             # ✅ FILL BLANKS FROM MASTER CSV
@@ -373,4 +370,5 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
