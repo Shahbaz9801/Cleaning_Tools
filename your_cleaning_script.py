@@ -93,35 +93,54 @@ class NoonCleaner(BaseCleaner):
             self.data['Fullfilment'] = self.data['Fullfilment'].replace({'Fulfilled by Noon (FBN)':'FBN','Fulfilled by Partner (FBP)':'FBP'})
 
             # ===============================
-            # ✅ FILL BLANKS FROM MASTER CSV
+            # ✅ MASTER CSV SKU MAPPING (CORRECT WAY)
             # ===============================
             
-            # Clean SKU columns
-            self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
-            master_df['SKU'] = master_df['SKU'].astype(str).str.strip()
-
-            # Convert blanks to NaN
-            self.data[['Brand Name','Category','Sub-Category','Channel Item Name']] = \
-            self.data[['Brand Name','Category','Sub-Category','Channel Item Name']].replace(r'^\s*$', np.nan, regex=True)
-
-            # Lookup merge (SKU basis)
-            lookup = self.data[['SKU']].merge(
-                master_df[['SKU','Brand','Category','Sub-Category','Product Titles']],
-                on='SKU',
-                how='left'
-            )
-
-            # Fill only blank values
-            self.data['Brand Name'] = self.data['Brand Name'].fillna(lookup['Brand'])
-            self.data['Category'] = self.data['Category'].fillna(lookup['Category'])
-            self.data['Sub-Category'] = self.data['Sub-Category'].fillna(lookup['Sub-Category'])
-            self.data['Channel Item Name'] = self.data['Channel Item Name'].fillna(lookup['Product Titles'])
-
+            # ---------- CLEAN FUNCTION ----------
+            def clean_text(x):
+                return (
+                    str(x)
+                    .strip()
+                    .replace('\xa0', '')
+                    .replace('–', '-')
+                    .replace('—', '-')
+                    .upper()
+                )
+            
+            # Clean SKU everywhere
+            self.data['SKU'] = self.data['SKU'].apply(clean_text)
+            master_df['SKU'] = master_df['SKU'].apply(clean_text)
+            
+            # Convert blanks to NaN (VERY IMPORTANT)
+            cols = ['Brand Name', 'Category', 'Sub-Category', 'Channel Item Name']
+            self.data[cols] = self.data[cols].replace(r'^\s*$', np.nan, regex=True)
+            
+            # Remove duplicate SKU from master
+            master_df = master_df.drop_duplicates(subset='SKU')
+            
+            # ---------- CREATE LOOKUP MAPS ----------
+            brand_map = master_df.set_index('SKU')['Brand'].to_dict()
+            cat_map   = master_df.set_index('SKU')['Category'].to_dict()
+            sub_map   = master_df.set_index('SKU')['Sub-Category'].to_dict()
+            title_map = master_df.set_index('SKU')['Product Titles'].to_dict()
+            
+            # ---------- FILL ONLY BLANK VALUES ----------
+            self.data.loc[self.data['Brand Name'].isna(), 'Brand Name'] = \
+                self.data.loc[self.data['Brand Name'].isna(), 'SKU'].map(brand_map)
+            
+            self.data.loc[self.data['Category'].isna(), 'Category'] = \
+                self.data.loc[self.data['Category'].isna(), 'SKU'].map(cat_map)
+            
+            self.data.loc[self.data['Sub-Category'].isna(), 'Sub-Category'] = \
+                self.data.loc[self.data['Sub-Category'].isna(), 'SKU'].map(sub_map)
+            
+            self.data.loc[self.data['Channel Item Name'].isna(), 'Channel Item Name'] = \
+                self.data.loc[self.data['Channel Item Name'].isna(), 'SKU'].map(title_map)
+            
             # ===============================
-            # ✅ SET GMV = 0 WHERE STATUS IS CANCELLED
+            # ✅ GMV = 0 WHERE STATUS CANCELLED
             # ===============================
-            self.data.loc[self.data['Status']=='Cancelled', 'GMV'] = 0
-
+            self.data.loc[self.data['Status'] == 'Cancelled', 'GMV'] = 0
             print(f"Cleaned Data Shape: {self.data.shape}")
 
         except Exception as e:
@@ -367,6 +386,7 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
