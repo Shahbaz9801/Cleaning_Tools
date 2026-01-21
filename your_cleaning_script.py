@@ -84,7 +84,7 @@ class NoonCleaner(BaseCleaner):
 
             # Filter irrelevant statuses
             self.data = self.data[~self.data['Status'].isin([
-                'Unshipped', 'Pending','Undelivered','Confirmed','Created','Exported','Fulfilling','Could Not Be Delivered'
+                'Unshipped', 'Pending','Undelivered','Confirmed','Created','Exported','Fulfilling','Could Not Be Delivered','Processing'
             ])]
 
             # Replace Country / Status / Fulfilment values
@@ -373,3 +373,4 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
