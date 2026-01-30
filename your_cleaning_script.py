@@ -130,7 +130,7 @@ class NoonCleaner(BaseCleaner):
             # ===============================
             # ✅ GMV = 0 WHERE STATUS IS CANCELLED
             # ===============================
-            self.data.loc[self.data['Status'] == 'Cancelled', 'GMV'] = 0
+            self.data.loc[self.data['Status'] == 'CANCELLED', 'GMV'] = 0
         except Exception as e:
             print(f"Error Cleaning Noon Data: {e}")
 
@@ -259,7 +259,7 @@ class AmazonCleaner(BaseCleaner):
             # ===============================
             # ✅ SET GMV = 0 WHERE STATUS IS CANCELLED
             # ===============================
-            self.data.loc[self.data['Status']=='Cancelled', 'QTY'] = 1
+            self.data.loc[self.data['Status']=='CANCELLED', 'QTY'] = 1
 
 
             print(f"Cleaned Amazon Data Shape: {self.data.shape}")
@@ -374,6 +374,7 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
