@@ -105,7 +105,10 @@ class NoonCleaner(BaseCleaner):
             self.data[cols] = self.data[cols].replace(r'^\s*$', np.nan, regex=True)
             
             # Remove duplicate SKU from master (IMPORTANT)
-            master_df = master_df.drop_duplicates(subset='SKU')
+            master = master_df.copy()
+            master['SKU'] = master['SKU'].astype(str).str.strip()
+            master = master.drop_duplicates(subset='SKU')
+
             
             # MERGE FULL DATA (SKU BASIS)
             self.data = self.data.merge(
@@ -130,7 +133,8 @@ class NoonCleaner(BaseCleaner):
             # ===============================
             # ✅ GMV = 0 WHERE STATUS IS CANCELLED
             # ===============================
-            self.data.loc[self.data['Status'] == 'CANCELLED', 'GMV'] = 0
+            self.data.loc[self.data['Status'].str.upper() == 'CANCELLED', 'GMV'] = 0
+
         except Exception as e:
             print(f"Error Cleaning Noon Data: {e}")
 
@@ -234,32 +238,60 @@ class AmazonCleaner(BaseCleaner):
             # ===============================
             # ✅ FILL BLANKS FROM MASTER CSV (SKU ↔ Partner SKU)
             # ===============================
-
-            # Clean columns
-            self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
-            master_df['Partner SKU'] = master_df['Partner SKU'].astype(str).str.strip()
-
-            # Convert blank strings to NaN
-            cols = ['Brand Name', 'Category', 'Sub-Category']
-            self.data[cols] = self.data[cols].replace(r'^\s*$', np.nan, regex=True)
-
-            # 🔥 Lookup merge (SKU → Partner SKU)
-            lookup = self.data[['SKU']].merge(
-                master_df[['Partner SKU', 'Brand', 'Category', 'Sub-Category']],
-                left_on='SKU',
-                right_on='Partner SKU',
+            master = master_df.copy()
+            master['SKU'] = master['SKU'].astype(str).str.strip()
+            master['Partner SKU'] = master['Partner SKU'].astype(str).str.strip()
+            
+            # 1) Try match on SKU
+            m1 = self.data.merge(
+                master[['SKU','Brand','Category','Sub-Category']],
+                on='SKU',
                 how='left'
             )
+            
+            # 2) If still blank, try match on Partner SKU
+            m2 = self.data.merge(
+                master[['Partner SKU','Brand','Category','Sub-Category']],
+                left_on='SKU',
+                right_on='Partner SKU',
+                how='left',
+                suffixes=('','_psku')
+            )
+            
+            self.data['Brand Name'] = self.data['Brand Name'].replace(r'^\s*$', np.nan, regex=True)
+            self.data['Category'] = self.data['Category'].replace(r'^\s*$', np.nan, regex=True)
+            self.data['Sub-Category'] = self.data['Sub-Category'].replace(r'^\s*$', np.nan, regex=True)
+            
+            self.data['Brand Name'] = self.data['Brand Name'].fillna(m1['Brand']).fillna(m2['Brand'])
+            self.data['Category'] = self.data['Category'].fillna(m1['Category']).fillna(m2['Category'])
+            self.data['Sub-Category'] = self.data['Sub-Category'].fillna(m1['Sub-Category']).fillna(m2['Sub-Category'])
 
-            # Fill only blank values
-            self.data['Brand Name'] = self.data['Brand Name'].fillna(lookup['Brand'])
-            self.data['Category'] = self.data['Category'].fillna(lookup['Category'])
-            self.data['Sub-Category'] = self.data['Sub-Category'].fillna(lookup['Sub-Category'])
+
+            # # Clean columns
+            # self.data['SKU'] = self.data['SKU'].astype(str).str.strip()
+            # master_df['Partner SKU'] = master_df['Partner SKU'].astype(str).str.strip()
+
+            # # Convert blank strings to NaN
+            # cols = ['Brand Name', 'Category', 'Sub-Category']
+            # self.data[cols] = self.data[cols].replace(r'^\s*$', np.nan, regex=True)
+
+            # # 🔥 Lookup merge (SKU → Partner SKU)
+            # lookup = self.data[['SKU']].merge(
+            #     master_df[['Partner SKU', 'Brand', 'Category', 'Sub-Category']],
+            #     left_on='SKU',
+            #     right_on='Partner SKU',
+            #     how='left'
+            # )
+
+            # # Fill only blank values
+            # self.data['Brand Name'] = self.data['Brand Name'].fillna(lookup['Brand'])
+            # self.data['Category'] = self.data['Category'].fillna(lookup['Category'])
+            # self.data['Sub-Category'] = self.data['Sub-Category'].fillna(lookup['Sub-Category'])
 
             # ===============================
             # ✅ SET GMV = 0 WHERE STATUS IS CANCELLED
             # ===============================
-            self.data.loc[self.data['Status']=='CANCELLED', 'QTY'] = 1
+            self.data.loc[self.data['Status'].isin(['CANCELLED','CANCELED']), 'QTY'] = 1
 
 
             print(f"Cleaned Amazon Data Shape: {self.data.shape}")
@@ -374,6 +406,7 @@ if __name__ == "__main__":
     revibe = RevibeCleaner("Revibe_Sales_Data.csv")
     revibe.clean()
     revibe.save_data("Clean_Revibe_Data.xlsx")
+
 
 
 
